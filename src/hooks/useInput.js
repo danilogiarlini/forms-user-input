@@ -1,33 +1,68 @@
-import { useState } from "react"
+import { useReducer } from "react";
+
+const initialInputState = { value: "", isTouched: false };
+
+const inputStateReducer = (state, action) => {
+  switch (action.type) {
+    case "INPUT_ENTERED": {
+      return {
+        value: action.value,
+        isTouched: state.isTouched,
+      };
+    }
+    case "INPUT_BLUR": {
+      return {
+        isTouched: true,
+        value: state.value,
+      };
+    }
+    case "RESET": {
+      return { isTouched: false, value: "" };
+    }
+    default:
+      return initialInputState;
+  }
+};
 
 const useInput = (validateValue) => {
-    const [enteredValue, setEnteredValue] = useState('')
-    const [isTouched, setIsTouched] = useState(false)
+  const [inputState, dispatch] = useReducer(
+    inputStateReducer,
+    initialInputState
+  );
 
-    const valueIsValid = validateValue(enteredValue)
-    const hasError = !valueIsValid && isTouched
+  //   const [enteredValue, set  EnteredValue] = useState("");
+  //   const [isTouched, setIsTouched] = useState(false);
 
-    const valueChangeHandler = (event) => {
-        setEnteredValue(event.target.value)
-    }
+  //   const valueIsValid = validateValue(enteredValue);
+  //   const hasError = !valueIsValid && isTouched;
+  const valueIsValid = validateValue(inputState.value);
+  const hasError = !valueIsValid && inputState.isTouched;
 
-    const valueBlurHandler = (event) => {
-        setIsTouched(true)
-    }
+  const valueChangeHandler = (event) => {
+    // setEnteredValue(event.target.value);
+    dispatch({ type: "INPUT_ENTERED", value: event.target.value });
+  };
 
-    const reset = () => {
-        setEnteredValue('')
-        setIsTouched(false)
-    }
+  const valueBlurHandler = (event) => {
+    // setIsTouched(true);
+    dispatch({ type: "INPUT_BLUR" });
+  };
 
-    return {
-        value: enteredValue,
-        isValid: valueIsValid,
-        hasError: hasError,
-        valueChangeHandler,
-        valueBlurHandler,
-        reset
-    }
-}
+  const reset = () => {
+    dispatch({ type: "RESET" });
+    // setEnteredValue("");
+    // setIsTouched(false);
+  };
 
-export default useInput
+  return {
+    // value: enteredValue,
+    value: inputState.value,
+    isValid: valueIsValid,
+    hasError: hasError,
+    valueChangeHandler,
+    valueBlurHandler,
+    reset,
+  };
+};
+
+export default useInput;
